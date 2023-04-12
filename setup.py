@@ -9,6 +9,6 @@ setup(name='MAGPIE',
       license='MIT',
       packages=['MAGPIE'],
       install_requires=[
-          'pandas','numpy','torch','sklearn'
+          'pandas','numpy','torch'
       ],
       zip_safe=False)
