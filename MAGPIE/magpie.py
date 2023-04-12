@@ -162,7 +162,7 @@ class output_MAGPIE:
         self.beta0_est = beta0_est
         self.beta1_est = beta1_est
         self.logPostProb = logPostProb
-        self.logLik_iter = logLik_Iter
+        self.logLik_iter = logLikVec_out
         self.logLik_final = logLik_final
 
 def MAGPIE(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
@@ -316,7 +316,7 @@ class output_MAGPIE_pval:
         self.beta0_est = beta0_est
         self.beta1_est = beta1_est
         self.logPostProb = logPostProb
-        self.logLik_iter = logLik_Iter
+        self.logLik_iter = logLikVec_out
         self.logLik_final = logLik_final
         self.pval = pval
 
