@@ -202,8 +202,7 @@ def MAGPIE_H1(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
         print('Algorithm fails to converge!') 
 
     logPostP_out = getPostP(x_mat, tmb_vec, tau_vec_out, beta0_vec_out, beta1_out)
-    out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, l0_out)
-    return out
+    return tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, l0_out
 
 
 """#### Under H0"""
