@@ -1,7 +1,7 @@
 # MAGPIE
 
 Tutorial of MAGPIE on Google Colab: <a 
-				       href="[(https://colab.research.google.com/drive/1ozZQ5wAZfWK3i8cazJ003nfelLR7EMzw?usp=sharing)](https://colab.research.google.com/drive/1ozZQ5wAZfWK3i8cazJ003nfelLR7EMzw?usp=sharing)">
+				       href="https://colab.research.google.com/drive/1ozZQ5wAZfWK3i8cazJ003nfelLR7EMzw?usp=sharing">
   	<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 	</a>
 	
