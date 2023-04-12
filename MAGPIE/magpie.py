@@ -10,36 +10,32 @@ Original file is located at
 import torch
 import torch.distributions as dist
 import torch.optim as optim
-import numpy as np
 import math
-import pandas as pd
-import sys
 import matplotlib.pyplot as plt
-import time
 
-if torch.cuda.is_available():  
-  dev = "cuda:0" 
-else:  
-  dev = "cpu"  
-device = torch.device(dev) 
+# if torch.cuda.is_available():  
+#   dev = "cuda:0" 
+# else:  
+#   dev = "cpu"  
+# device = torch.device(dev) 
 
-if torch.cuda.is_available():
-   print ("Cuda is available")
-   device_id = torch.cuda.current_device()
-   gpu_properties = torch.cuda.get_device_properties(device_id)
-   print("Found %d GPUs available. Using GPU %d (%s) of compute capability %d.%d with "
-          "%.1fGb total memory.\n" % 
-          (torch.cuda.device_count(),
-          device_id,
-          gpu_properties.name,
-          gpu_properties.major,
-          gpu_properties.minor,
-          gpu_properties.total_memory / 1e9))
-else:    
-   print ("Cuda is not available")
+# if torch.cuda.is_available():
+#    print ("Cuda is available")
+#    device_id = torch.cuda.current_device()
+#    gpu_properties = torch.cuda.get_device_properties(device_id)
+#    print("Found %d GPUs available. Using GPU %d (%s) of compute capability %d.%d with "
+#           "%.1fGb total memory.\n" % 
+#           (torch.cuda.device_count(),
+#           device_id,
+#           gpu_properties.name,
+#           gpu_properties.major,
+#           gpu_properties.minor,
+#           gpu_properties.total_memory / 1e9))
+# else:    
+#    print ("Cuda is not available")
 
-def df_to_tensor(df):
-    return torch.from_numpy(df.values).float().to(device)
+# def df_to_tensor(df):
+#     return torch.from_numpy(df.values).float().to(device)
 
 """#### Fitting under H1"""
 
@@ -155,17 +151,7 @@ def MAGPIE_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_init, lr, maxI
         logLik_final = logL_H0
     return p_vec_out, beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind
 
-
-class output_MAGPIE:
-    def __init__(self, driver_freq, beta0_est, beta1_est, logPostProb, logLik_iter, logLik_final):
-        self.driver_freq = driver_freq
-        self.beta0_est = beta0_est
-        self.beta1_est = beta1_est
-        self.logPostProb = logPostProb
-        self.logLik_iter = logLik_iter
-        self.logLik_final = logLik_final
-
-def MAGPIE(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
+def MAGPIE_H1(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
     P = x_mat.size(1)
     if len(tmb_vec.shape)>1:
         tmb_vec = tmb_vec.flatten()
@@ -215,10 +201,6 @@ def MAGPIE(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
     out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, l0_out)
     return out
 
-def checkConvergence(logLikVec_out):
-    logLik_vec_final = logLikVec_out[logLikVec_out != 0] 
-    print(plt.plot(logLik_vec_final.cpu().data.numpy()))
-    return None
 
 """#### Under H0"""
 
@@ -310,7 +292,7 @@ def genMatH0(x_mat, tmb, beta1_est, nSim):
     return m3.sample(torch.Size([nSim]))
 
 
-class output_MAGPIE_pval:
+class output_MAGPIE:
     def __init__(self, driver_freq, beta0_est, beta1_est, logPostProb, logLik_iter, logLik_final, pval):
         self.driver_freq = driver_freq
         self.beta0_est = beta0_est
@@ -320,31 +302,42 @@ class output_MAGPIE_pval:
         self.logLik_final = logLik_final
         self.pval = pval
 
-def MAGPIE_pval(x_mat, tmb_vec, nPermut=1000, lr = .1, maxIter=200, earlystop=1e-8):
+def MAGPIE(x_mat, tmb_vec, return_pval = True, nPermut=100, lr = .1, maxIter=200, earlystop=1e-8):
     M = x_mat.size(1)
     if len(tmb_vec.shape)>1:
         tmb_vec = tmb_vec.flatten()
 
-    tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE(x_mat, tmb_vec, lr, maxIter, earlystop)
-    beta0_vec_out0, beta1_out0, logLikVec_out0, logLik_final0 = MAGPIE_H0(x_mat, tmb_vec, lr, maxIter, earlystop)
-    chiqsq_obs = 2*(logLik_final - logLik_final0)
-    if chiqsq_obs<0:
-        chiqsq_obs = chiqsq_obs*0.
+    if return_pval:
+        tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE_H1(x_mat, tmb_vec, lr, maxIter, earlystop)
+        beta0_vec_out0, beta1_out0, logLikVec_out0, logLik_final0 = MAGPIE_H0(x_mat, tmb_vec, lr, maxIter, earlystop)
+        chiqsq_obs = 2*(logLik_final - logLik_final0)
+        if chiqsq_obs<0:
+            chiqsq_obs = chiqsq_obs*0.
 
-    x_mat_sim = genMatH0(x_mat, tmb_vec, beta1_out, nPermut)
-    chiqsq_vec = torch.empty(nPermut, device = device)
+        x_mat_sim = genMatH0(x_mat, tmb_vec, beta1_out, nPermut)
+        chiqsq_vec = torch.empty(nPermut, device = device)
 
-    for i in range(nPermut):
-        tau_vec_out_sim, beta0_vec_sim, beta1_sim, logPostP_sim, logLikVec_sim, logLik_final_sim = MAGPIE(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
-        beta0_vec_sim0, beta1_sim0, logLikVec_sim0, logLik_final_sim0= MAGPIE_H0(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
-        chiqsq_vec[i] = 2*(logLik_final_sim - logLik_final_sim0)
-        if chiqsq_vec[i] < 0:
-            chiqsq_vec[i] = chiqsq_vec[i]*0.
+        for i in range(nPermut):
+            tau_vec_out_sim, beta0_vec_sim, beta1_sim, logPostP_sim, logLikVec_sim, logLik_final_sim = MAGPIE_H1(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
+            beta0_vec_sim0, beta1_sim0, logLikVec_sim0, logLik_final_sim0= MAGPIE_H0(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
+            chiqsq_vec[i] = 2*(logLik_final_sim - logLik_final_sim0)
+            if chiqsq_vec[i] < 0:
+                chiqsq_vec[i] = chiqsq_vec[i]*0.
 
-    pval = ((chiqsq_vec>=chiqsq_obs).sum(0) + 1) / (nPermut+1)
-
-    out = output_MAGPIE_pval(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final, pval)
+        pval = ((chiqsq_vec>=chiqsq_obs).sum(0) + 1) / (nPermut+1)
+        out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final, pval)
+    else:
+        tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE_H1(x_mat, tmb_vec, lr, maxIter, earlystop)
+        pval = 'NA'
+        out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final, pval)
     return out
+
+"""### Check convergence"""
+
+def checkConvergence(logLikVec_out):
+    logLik_vec_final = logLikVec_out[logLikVec_out != 0] 
+    print(plt.plot(logLik_vec_final.cpu().data.numpy()))
+    return None
 
 """### Simulate data"""
 
@@ -365,4 +358,3 @@ def simulateData(N, p_vec, beta0_vec, beta1, tmb_sd):
     p_mat[temp3[:,0], temp3[:,1]-1] = 1.
     m2 = dist.Binomial(1, p_mat)
     return m2.sample(), tmb_vec, cluster_lbl
-
