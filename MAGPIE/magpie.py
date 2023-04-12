@@ -37,6 +37,10 @@ import matplotlib.pyplot as plt
 # def df_to_tensor(df):
 #     return torch.from_numpy(df.values).float().to(device)
 
+"""#### Use CPU by default"""
+dev = "cpu"  
+device = torch.device(dev) 
+
 """#### Fitting under H1"""
 
 def solve_b0(N, b1, p, y):
