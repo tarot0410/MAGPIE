@@ -1,13 +1,13 @@
 from setuptools import setup
 
-setup(name='SECANT',
+setup(name='MAGPIE',
       version='0.1',
-      description='biology-guided SEmi-supervised method for Clustering, classification, and ANnoTation of single-cell multi-omics',
-      url='https://github.com/tarot0410/SECANT',
+      description='XXXs',
+      url='https://github.com/tarot0410/MAGPIE',
       author='Xinjun Wang',
-      author_email='xiw119@pitt.edu',
+      author_email='wangx11@mskcc.org',
       license='MIT',
-      packages=['SECANT'],
+      packages=['MAGPIE'],
       install_requires=[
           'pandas','numpy','torch','sklearn'
       ],
