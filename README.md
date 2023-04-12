@@ -1,7 +1,8 @@
 # MAGPIE
 
-Tutorial of MAGPIE: <a href="https://colab.research.google.com/drive/1f1m6joYnhIgvHmdsKa1ICpDX_-_hWHVp?usp=sharing">
-  	<img src="https://colab.research.google.com/drive/1ozZQ5wAZfWK3i8cazJ003nfelLR7EMzw?usp=sharing" alt="Open In Colab"/>
+Tutorial of MAGPIE on Google Colab: <a 
+				       href="[(https://colab.research.google.com/drive/1ozZQ5wAZfWK3i8cazJ003nfelLR7EMzw?usp=sharing)](https://colab.research.google.com/drive/1ozZQ5wAZfWK3i8cazJ003nfelLR7EMzw?usp=sharing)">
+  	<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 	</a>
 	
 
@@ -9,9 +10,9 @@ Tutorial of MAGPIE: <a href="https://colab.research.google.com/drive/1f1m6joYnhI
 
 ### From source
 
-Download a local copy of SECANT and install from the directory:
+Download a local copy of MAGPIE and install from the directory:
 
-	git clone https://github.com/tarot0410/SECANT.git
+	git clone https://github.com/tarot0410/MAGPIE.git
 	cd SECANT
 	pip install .
 
