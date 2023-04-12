@@ -23,22 +23,22 @@ Download a local copy of MAGPIE and install from the directory:
 MAGPIE(x_mat, tmb_vec, return_pval = True, nPermut=100, lr = .1, maxIter=200, earlystop=1e-8)
 
 ### Input
-x_mat: Gene alteration matrix (a torch tensor of size N*M, N: # of tumors; M: # of genes)
-tmb_vec: Tumor mutational burden score for each tumor (a tor tensor of size N, can be binary [e.g., cut off at 25% percentile] or continuous [e.g., centered log-transformed])
+- x_mat: Gene alteration matrix (a torch tensor of size N*M, N: # of tumors; M: # of genes)
+- tmb_vec: Tumor mutational burden score for each tumor (a tor tensor of size N, can be binary [e.g., cut off at 25% percentile] or continuous [e.g., centered log-transformed])
 - optional arguments:
-return_pval: If true (default), the algorithm will compute emperical p-value through parametric bootstrap (could take a few minutes)
-nPermut: The number of bootstrap samples used to compute p-value (default 100).
-lr: Learning rate for L-BFGS optimization algorithm (default 0.1)
-maxIter: Maximum iterations allowed (default 200)
-earlystop: Stop iterations if the relative change in loss is minimal (default 1e-8)
+- return_pval: If true (default), the algorithm will compute emperical p-value through parametric bootstrap (could take a few minutes)
+- nPermut: The number of bootstrap samples used to compute p-value (default 100).
+- lr: Learning rate for L-BFGS optimization algorithm (default 0.1)
+- maxIter: Maximum iterations allowed (default 200)
+- earlystop: Stop iterations if the relative change in loss is minimal (default 1e-8)
 
 ### Output
-driver_freq: A torch tensor of size (M+1), where the first value refers to the proportion of tumors not estimated to have a driver mutation, and the rest values refer to proportion of tumors estimated to have a driver mutation in each gene.
-beta0_est: A torch tensor of size M, where each value refers to the estimated baseline log odds of the passenger mutation rate for the each gene
-beta1_est: A scalor referring to the estimated common association of tumor mutational burden with passenger mutation rate (in log scale)
-logPostProb: A torch tensor of size N*(M+1), where each entry refers to the posterior probability of having a driver mutation in each gene. The first column refers to the posterior probability of not having any driver mutation.
-logLik_iter: A torch tensor of size *maxIter*, recording the loglikelihood value at each iteration. If the algorithm stops early before reaching maxIter, the rest entries are filled with 0.
-logLik_final: A scalor summarizing the final loglikelihood value at convergence.
+- driver_freq: A torch tensor of size (M+1), where the first value refers to the proportion of tumors not estimated to have a driver mutation, and the rest values refer to proportion of tumors estimated to have a driver mutation in each gene.
+- beta0_est: A torch tensor of size M, where each value refers to the estimated baseline log odds of the passenger mutation rate for the each gene
+- beta1_est: A scalor referring to the estimated common association of tumor mutational burden with passenger mutation rate (in log scale)
+- logPostProb: A torch tensor of size N*(M+1), where each entry refers to the posterior probability of having a driver mutation in each gene. The first column refers to the posterior probability of not having any driver mutation.
+- logLik_iter: A torch tensor of size *maxIter*, recording the loglikelihood value at each iteration. If the algorithm stops early before reaching maxIter, the rest entries are filled with 0.
+- logLik_final: A scalor summarizing the final loglikelihood value at convergence.
 pval: A scalor referring to the emperical p-value.
 
 # Paper
