@@ -26,6 +26,7 @@ MAGPIE(x_mat, tmb_vec, return_pval = True, nPermut=100, lr = .1, maxIter=200, ea
 Required
 - x_mat: Gene alteration matrix (a torch tensor of size N*M, N: # of tumors; M: # of genes)
 - tmb_vec: Tumor mutational burden score for each tumor (a tor tensor of size N, can be binary [e.g., cut off at 25% percentile] or continuous [e.g., centered log-transformed])
+
 Optional
 - return_pval: If true (default), the algorithm will compute emperical p-value through parametric bootstrap (could take a few minutes)
 - nPermut: The number of bootstrap samples used to compute p-value (default 100).
