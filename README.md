@@ -13,7 +13,7 @@ Tutorial of MAGPIE on Google Colab: <a
 Download a local copy of MAGPIE and install from the directory:
 
 	git clone https://github.com/tarot0410/MAGPIE.git
-	cd SECANT
+	cd MAGPIE
 	pip install .
 
 ### Dependencies
