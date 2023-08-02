@@ -47,14 +47,14 @@ def solve_b0(N, b1, p, y):
     # Define the function and its derivative
     def f(b0):
         return 1/N * (1/(1+(-b0-b1*y).exp())).sum() - p
-    
+
     def df(b0):
         return 1/N * ((-b0-b1*y).exp()/(1+(-b0-b1*y).exp())**2).sum()
-    
+
     # Set the initial guess and the tolerance
     b0 = torch.zeros(1, device = device)
     epsilon = 1e-8
-    
+
     # Set the step size factor
     nIter = 0
     # Iterate until convergence
@@ -65,8 +65,8 @@ def solve_b0(N, b1, p, y):
         nIter += 1
     return b0
 
-def logL_adjust(x_mat, tmb_vec, p_vec, beta0_vec, beta1, eps=1e-10): ### Change eps
-    temp0 = beta0_vec + tmb_vec[:, None] * beta1
+def logL_adjust(x_mat, tmb_vec, p_vec, beta0_vec, beta1_vec, eps=1e-10): ### Change eps
+    temp0 = beta0_vec + tmb_vec[:, None] * beta1_vec
     log1minusP = -(1+temp0.exp()).log()
     temp1 = x_mat * temp0 + log1minusP
     lf0 = temp1.sum(1)
@@ -77,11 +77,11 @@ def logL_adjust(x_mat, tmb_vec, p_vec, beta0_vec, beta1, eps=1e-10): ### Change 
 def optimDL(parameters, x_mat, tmb_vec, lr, maxIter, earlystop):
     optimizer = optim.LBFGS(parameters, lr, tolerance_grad=1e-6 , line_search_fn='strong_wolfe')
 
-    p_vec, beta0_vec, beta1 = parameters
+    p_vec, beta0_vec, beta1_vec = parameters
     def closure():
         optimizer.zero_grad()
         p_vec_tran = dist.biject_to(dist.Multinomial.arg_constraints['probs'])(p_vec)
-        NLL = - logL_adjust(x_mat, tmb_vec, p_vec_tran, beta0_vec, beta1)
+        NLL = - logL_adjust(x_mat, tmb_vec, p_vec_tran, beta0_vec, beta1_vec)
         NLL.backward()
         return NLL
 
@@ -100,10 +100,10 @@ def optimDL(parameters, x_mat, tmb_vec, lr, maxIter, earlystop):
         optimizer.step(closure)
 
     p_vec_tran = dist.biject_to(dist.Multinomial.arg_constraints['probs'])(p_vec)
-    return p_vec_tran, beta0_vec, beta1, logLikVec, -NLL, na_ind
+    return p_vec_tran, beta0_vec, beta1_vec, logLikVec, -NLL, na_ind
 
-def getPostP(x_mat, tmb_vec, p_vec, beta0_vec, beta1, eps=1e-10):
-    temp0 = beta0_vec + tmb_vec[:, None] * beta1
+def getPostP(x_mat, tmb_vec, p_vec, beta0_vec, beta1_vec, eps=1e-10):
+    temp0 = beta0_vec + tmb_vec[:, None] * beta1_vec
     log1minusP = -(1+temp0.exp()).log()
     temp1 = x_mat * temp0 + log1minusP
     lf0 = temp1.sum(1)
@@ -111,32 +111,32 @@ def getPostP(x_mat, tmb_vec, p_vec, beta0_vec, beta1, eps=1e-10):
     temp2 = torch.cat((lf0[:,None], lfk), 1) + (p_vec+eps).log()
     return temp2 - temp2.logsumexp(dim=1)[:,None]
 
-def algorithm_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_init, lr, maxIter, earlystop):
+def algorithm_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop):
     p_vec_init0 = p_vec_init.clone()
     beta0_vec = beta0_vec_init.clone()
-    beta1 = beta1_init.clone()
+    beta1_vec = beta1_vec_init.clone()
 
    # Add constratins
     p_vec = dist.biject_to(dist.Multinomial.arg_constraints['probs']).inv(p_vec_init0)
 
     p_vec.requires_grad = True
     beta0_vec.requires_grad = True
-    beta1.requires_grad = True
+    beta1_vec.requires_grad = True
 
-    parameters = [p_vec, beta0_vec, beta1]
-    p_vec_out, beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind = optimDL(parameters, x_mat, tmb_vec, lr, maxIter, earlystop)
+    parameters = [p_vec, beta0_vec, beta1_vec]
+    p_vec_out, beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind = optimDL(parameters, x_mat, tmb_vec, lr, maxIter, earlystop)
 
-    return p_vec_out, beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind
+    return p_vec_out, beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind
 
-def MAGPIE_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_init, lr, maxIter, earlystop):
-    p_vec_out, beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind = algorithm_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_init, lr, maxIter, earlystop)
+def MAGPIE_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop):
+    p_vec_out, beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind = algorithm_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop)
     count = 0
     while na_ind == 1 and count < 2:
         lr = lr / 10
         maxIter = maxIter * 2
-        p_vec_out, beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind = algorithm_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_init, lr, maxIter, earlystop)
+        p_vec_out, beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind = algorithm_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop)
         count += 1
-    
+
     p_vec_H0 = torch.zeros(len(p_vec_init), device = device)
     p_vec_H0[0] = 1.
     obs_rate = x_mat.mean(0)
@@ -145,15 +145,15 @@ def MAGPIE_temp(x_mat, tmb_vec, p_vec_init, beta0_vec_init, beta1_init, lr, maxI
     beta0_infer = torch.empty(M, device = device)
     for i in range(M):
         obs_rate0 = obs_rate[i]
-        beta0_infer[i] = solve_b0(N, beta1_out.data, obs_rate0, tmb_vec)
-    logL_H0 = logL_adjust(x_mat, tmb_vec, p_vec_H0, beta0_infer, beta1_out)
+        beta0_infer[i] = solve_b0(N, beta1_vec_out[i].data, obs_rate0, tmb_vec)
+    logL_H0 = logL_adjust(x_mat, tmb_vec, p_vec_H0, beta0_infer, beta1_vec_out)
 
     # print('logL_H0: ', logL_H0)
     if logLik_final<logL_H0:
         p_vec_out = p_vec_H0
         beta0_vec_out = beta0_infer
         logLik_final = logL_H0
-    return p_vec_out, beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind
+    return p_vec_out, beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind
 
 def MAGPIE_H1(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
     P = x_mat.size(1)
@@ -163,7 +163,7 @@ def MAGPIE_H1(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
     temp0 = torch.ones(1, device = device)*.01
 
     # Initialization
-    beta1_init = torch.ones(1, device = device)*0.01
+    beta1_init = torch.zeros(P, device = device)
     p_vec_temp = x_mat.mean(0)
     p_vec_temp[p_vec_temp==0] = 1/x_mat.size(0)
 
@@ -172,15 +172,15 @@ def MAGPIE_H1(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
     for i in range(r_init_vec.size(0)):
         r0 = r_init_vec[i]
         p_init_mat[i] = torch.cat((1-r0[None], r0*p_vec_temp/p_vec_temp.sum()))
-    
+
     beta0_init_mat = torch.empty(2, P, device = device)
     beta0_init_mat[0] = (p_vec_temp / (1-p_vec_temp)).log()
     beta0_init_mat[1] = (temp0 / (1-temp0)).log()
-    
+
     # Collect best result
     tau_vec_out = torch.empty(P+1, device = device)
     beta0_vec_out = torch.empty(P, device = device)
-    beta1_out = torch.empty(1, device = device)
+    beta1_vec_out = torch.empty(P, device = device)
     logLikVec_out = torch.empty(maxIter, device = device)
     l0_out = torch.tensor([float('-Inf')], device = device)
     na_ind_out = torch.tensor(float('nan'), device = device)
@@ -189,20 +189,20 @@ def MAGPIE_H1(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
         p_vec_init = p_init_mat[i]
         for j in range(beta0_init_mat.size(0)):
             beta0_vec = beta0_init_mat[j]
-            tau_vec_new, beta0_vec_new, beta1_new, logLikVec_new, l0_new, na_ind_new = MAGPIE_temp(x_mat, tmb_vec, p_vec_init, beta0_vec, beta1_init, lr, maxIter, earlystop)  
+            tau_vec_new, beta0_vec_new, beta1_vec_new, logLikVec_new, l0_new, na_ind_new = MAGPIE_temp(x_mat, tmb_vec, p_vec_init, beta0_vec, beta1_init, lr, maxIter, earlystop)
             if l0_new > l0_out:
                 tau_vec_out = tau_vec_new
-                beta0_vec_out = beta0_vec_new 
-                beta1_out = beta1_new
+                beta0_vec_out = beta0_vec_new
+                beta1_vec_out = beta1_vec_new
                 logLikVec_out = logLikVec_new
                 l0_out = l0_new
-                na_ind_out = na_ind_new          
+                na_ind_out = na_ind_new
 
     if na_ind_out == 1:
-        print('Algorithm fails to converge!') 
+        print('Algorithm fails to converge!')
 
-    logPostP_out = getPostP(x_mat, tmb_vec, tau_vec_out, beta0_vec_out, beta1_out)
-    return tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, l0_out
+    logPostP_out = getPostP(x_mat, tmb_vec, tau_vec_out, beta0_vec_out, beta1_vec_out)
+    return tau_vec_out, beta0_vec_out, beta1_vec_out, logPostP_out, logLikVec_out, l0_out
 
 
 """#### Under H0"""
@@ -220,10 +220,10 @@ def logL0(x_mat, tmb_vec, beta0, beta1):
 def optimDL0(parameters, x_mat, tmb_vec, lr, maxIter, earlystop):
     optimizer = optim.LBFGS(parameters, lr, tolerance_grad=1e-6 , line_search_fn='strong_wolfe')
 
-    beta0_vec, beta1 = parameters
+    beta0_vec, beta1_vec = parameters
     def closure():
         optimizer.zero_grad()
-        NLL = - logL0(x_mat, tmb_vec, beta0_vec, beta1)
+        NLL = - logL0(x_mat, tmb_vec, beta0_vec, beta1_vec)
         NLL.backward()
         return NLL
 
@@ -240,43 +240,43 @@ def optimDL0(parameters, x_mat, tmb_vec, lr, maxIter, earlystop):
             if abs(rel_diff) < earlystop or rel_diff>0:
                 break
         optimizer.step(closure)
-    return beta0_vec, beta1, logLikVec, -NLL, na_ind
+    return beta0_vec, beta1_vec, logLikVec, -NLL, na_ind
 
-def algorithm_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_init, lr, maxIter, earlystop):
+def algorithm_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop):
     beta0_vec = beta0_vec_init.clone()
-    beta1 = beta1_init.clone()
+    beta1_vec = beta1_vec_init.clone()
 
     beta0_vec.requires_grad = True
-    beta1.requires_grad = True
+    beta1_vec.requires_grad = True
 
-    parameters = [beta0_vec, beta1]
-    beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind = optimDL0(parameters, x_mat, tmb_vec, lr, maxIter, earlystop)
+    parameters = [beta0_vec, beta1_vec]
+    beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind = optimDL0(parameters, x_mat, tmb_vec, lr, maxIter, earlystop)
 
-    return beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind
+    return beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind
 
-def MAGPIE_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_init, lr, maxIter, earlystop):
-    beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind = algorithm_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_init, lr, maxIter, earlystop)
+def MAGPIE_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop):
+    beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind = algorithm_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop)
     count = 0
     while na_ind == 1 and count < 2:
         lr = lr / 10
         maxIter = maxIter * 2
-        beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind = algorithm_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_init, lr, maxIter, earlystop)
+        beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind = algorithm_temp0(x_mat, tmb_vec, beta0_vec_init, beta1_vec_init, lr, maxIter, earlystop)
         count += 1
-    return beta0_vec_out, beta1_out, logLikVec, logLik_final, na_ind
+    return beta0_vec_out, beta1_vec_out, logLikVec, logLik_final, na_ind
 
 def MAGPIE_H0(x_mat, tmb_vec, lr=.1, maxIter=200, earlystop=1e-8):
     # Initialization
-    beta1_init = torch.ones(1, device = device)*0.01
+    beta1_init = torch.zeros(x_mat.size(1), device = device)
     p_vec_temp = x_mat.mean(0)
     p_vec_temp[p_vec_temp==0] = 1/x_mat.size(0)
     beta0_vec = (p_vec_temp / (1-p_vec_temp)).log()
-    
-    beta0_vec_out, beta1_out, logLikVec_out, l0_out, na_ind_out = MAGPIE_temp0(x_mat, tmb_vec, beta0_vec, beta1_init, lr, maxIter, earlystop)  
+
+    beta0_vec_out, beta1_vec_out, logLikVec_out, l0_out, na_ind_out = MAGPIE_temp0(x_mat, tmb_vec, beta0_vec, beta1_init, lr, maxIter, earlystop)
 
     if na_ind_out == 1:
-        print('Algorithm fails to converge under H0!') 
+        print('Algorithm fails to converge under H0!')
 
-    return beta0_vec_out, beta1_out, logLikVec_out, l0_out
+    return beta0_vec_out, beta1_vec_out, logLikVec_out, l0_out
 
 """### Compute p-value"""
 
@@ -288,7 +288,7 @@ def genMatH0(x_mat, tmb, beta1_est, nSim):
     beta0_infer = torch.empty(M, device = device)
     for i in range(M):
         obs_rate0 = obs_rate[i]
-        beta0_infer[i] = solve_b0(N, beta1_est, obs_rate0, tmb)    
+        beta0_infer[i] = solve_b0(N, beta1_est[i], obs_rate0, tmb)
     temp2 = beta0_infer + tmb[:,None] * beta1_est
     pi_mat_new = 1/(1+(-temp2).exp())
     m3 = dist.Binomial(1, pi_mat_new)
@@ -311,28 +311,28 @@ def MAGPIE(x_mat, tmb_vec, return_pval = True, nPermut=100, lr = .1, maxIter=200
         tmb_vec = tmb_vec.flatten()
 
     if return_pval:
-        tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE_H1(x_mat, tmb_vec, lr, maxIter, earlystop)
-        beta0_vec_out0, beta1_out0, logLikVec_out0, logLik_final0 = MAGPIE_H0(x_mat, tmb_vec, lr, maxIter, earlystop)
+        tau_vec_out, beta0_vec_out, beta1_vec_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE_H1(x_mat, tmb_vec, lr, maxIter, earlystop)
+        beta0_vec_out0, beta1_vec_out, logLikVec_out0, logLik_final0 = MAGPIE_H0(x_mat, tmb_vec, lr, maxIter, earlystop)
         chiqsq_obs = 2*(logLik_final - logLik_final0)
         if chiqsq_obs<0:
             chiqsq_obs = chiqsq_obs*0.
 
-        x_mat_sim = genMatH0(x_mat, tmb_vec, beta1_out, nPermut)
+        x_mat_sim = genMatH0(x_mat, tmb_vec, beta1_vec_out, nPermut)
         chiqsq_vec = torch.empty(nPermut, device = device)
 
         for i in range(nPermut):
-            tau_vec_out_sim, beta0_vec_sim, beta1_sim, logPostP_sim, logLikVec_sim, logLik_final_sim = MAGPIE_H1(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
-            beta0_vec_sim0, beta1_sim0, logLikVec_sim0, logLik_final_sim0= MAGPIE_H0(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
+            tau_vec_out_sim, beta0_vec_sim, beta1_vec_sim, logPostP_sim, logLikVec_sim, logLik_final_sim = MAGPIE_H1(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
+            beta0_vec_sim0, beta1_vec_sim0, logLikVec_sim0, logLik_final_sim0= MAGPIE_H0(x_mat_sim[i], tmb_vec, lr, maxIter, earlystop)
             chiqsq_vec[i] = 2*(logLik_final_sim - logLik_final_sim0)
             if chiqsq_vec[i] < 0:
                 chiqsq_vec[i] = chiqsq_vec[i]*0.
 
         pval = ((chiqsq_vec>=chiqsq_obs).sum(0) + 1) / (nPermut+1)
-        out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final, pval)
+        out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_vec_out, logPostP_out, logLikVec_out, logLik_final, pval)
     else:
-        tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE_H1(x_mat, tmb_vec, lr, maxIter, earlystop)
+        tau_vec_out, beta0_vec_out, beta1_vec_out, logPostP_out, logLikVec_out, logLik_final = MAGPIE_H1(x_mat, tmb_vec, lr, maxIter, earlystop)
         pval = 'NA'
-        out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_out, logPostP_out, logLikVec_out, logLik_final, pval)
+        out = output_MAGPIE(tau_vec_out, beta0_vec_out, beta1_vec_out, logPostP_out, logLikVec_out, logLik_final, pval)
     return out
 
 """### Check convergence"""
@@ -344,7 +344,7 @@ def checkConvergence(logLikVec_out):
 
 """### Simulate data"""
 
-def simulateData(N, p_vec, beta0_vec, beta1, tmb_sd):
+def simulateData(N, p_vec, beta0_vec, beta1_vec, tmb_sd):
     m1 = dist.Normal(torch.tensor([0.], device = device),
                      torch.tensor([tmb_sd], device = device))
     tmb_vec = m1.sample(torch.Size(torch.tensor([N])))
@@ -352,8 +352,8 @@ def simulateData(N, p_vec, beta0_vec, beta1, tmb_sd):
     m0 = dist.Multinomial(N, p_vec)
     N_vec = m0.sample().int()
     cluster_lbl = torch.arange(len(p_vec), device = device).repeat_interleave(N_vec.int())
-        
-    temp1 = beta0_vec + tmb_vec * beta1
+
+    temp1 = beta0_vec + tmb_vec * beta1_vec
     p_mat = temp1.exp() / (1+temp1.exp())
     temp2 = torch.stack((torch.arange(N, device = device),
                          cluster_lbl), 1)
