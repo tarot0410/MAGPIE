@@ -46,9 +46,7 @@ pval: A scalor referring to the emperical p-value.
 # Variant-level analysis
 The average posterior probability that variant *l* is a driver can be computed as follows:
 
-$$ P_{j(l)}= \frac{1}{N_{j(l)}}\sum_{i=1}^N x_{ij(l)} w_{ij} $$ 
-where 
-$$ N_{j(l)}=\sum_{i=1}^N x_{ij(l)} $$
+$$ P_{j(l)}= \frac{1}{N_{j(l)}}\sum_{i=1}^N x_{ij(l)} w_{ij} , where N_{j(l)}=\sum_{i=1}^N x_{ij(l)} $$
 
 # Paper
 Wang X, Kostrzewa C, Reiner A, Shen R, Colin B. Adaptation of a Mutual Exclusivity Framework to Identify Driver Mutations within Biological Pathways. [*Submitted*. 2023+]
