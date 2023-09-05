@@ -48,7 +48,7 @@ Let $x_{ij(l)}$ denote the mutation status (1-yes; 0-no) of variant *l* from gen
 
 The average posterior probability that variant *l* is a driver can be computed as follows:
 
-$P_{j(l)}= \frac{1}{N_{j(l)}} \ sum_{i=1}^N x_{ij(l)} w_{ij}$
+$P_{j(l)}= \frac{1}{N_{j(l)}} \sum_{i=1}^N x_{ij(l)} w_{ij}$
 
 where $N_{j(l)}=\sum_{i=1}^N x_{ij(l)}$ 
 
