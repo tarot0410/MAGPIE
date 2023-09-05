@@ -48,7 +48,7 @@ Let $x_{ij(l)}$ denote the mutation status (1-yes; 0-no) of variant *l* from gen
 
 The average posterior probability that variant *l* is a driver can be computed as follows:
 
-$$ P_{j(l)}= \frac{1}{N_{j(l)}}\sum_{i=1}^N x_{ij(l)} w_{ij} \ , where \ N_{j(l)}=\sum_{i=1}^N x_{ij(l)} $$
+$$ P_{j(l)}= \frac{1}{N_{j(l)}}\sum_{i=1}^N x_{ij(l)} w_{ij} \ , where \ N_{j(l)}=\sum_{i=1}^N x_{ij(l)} \ and \ w_{ij} \ is the posterior probability of having a driver mutation in the corresponding gene estimated from gene-level analysis $$
 
 # Paper
 Wang X, Kostrzewa C, Reiner A, Shen R, Colin B. Adaptation of a Mutual Exclusivity Framework to Identify Driver Mutations within Biological Pathways. [*Submitted*. 2023+]
