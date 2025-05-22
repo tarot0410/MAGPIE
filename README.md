@@ -1,4 +1,4 @@
-# MAGPIE
+## MAGPIE
 
 MAGPIE is a statistical and computational method for identifying probabilistically both the specific genes within a pathway and the individual mutations within such genes that are truly the drivers. It builds on a likelihood approach leveraging the mutual exclusivity pattern within an oncogenic pathway.
 
@@ -8,7 +8,7 @@ A tutorial of MAGPIE on Google Colab: <a
 	</a>
 	
 
-# Installation
+## Installation
 
 ### From source
 
@@ -18,7 +18,7 @@ Download a local copy of MAGPIE and install from the directory:
 	cd MAGPIE
 	pip install .
 
-# Core function (gene-level analysis)
+## Core function (gene-level analysis)
 
 MAGPIE(x_mat, tmb_vec, return_pval = True, nPermut=100, lr = .1, maxIter=200, earlystop=1e-8)
 
@@ -43,7 +43,7 @@ Optional
 - **logLik_final**: A scalor summarizing the final loglikelihood value at convergence.
 pval: A scalor referring to the emperical p-value.
 
-# Variant-level analysis
+## Variant-level analysis
 Let $x_{ij(l)}$ denote the mutation status (1-yes; 0-no) of variant *l* from gene *j* in tumor *i*, where variant *l* is nested within gene *j*.
 
 The average posterior probability that variant *l* is a driver can be computed as follows:
@@ -56,5 +56,5 @@ $$N_{j(l)}=\sum_{i=1}^N x_{ij(l)}$$
 
 and $w_{ij}$ is the posterior probability of having a driver mutation in the corresponding gene estimated from gene-level analysis
 
-# Paper
+## Paper
 Wang X, Kostrzewa C, Reiner A, Shen R, Colin B. Adaptation of a mutual exclusivity framework to identify driver mutations within oncogenic pathways. *The American Journal of Human Genetics* (2024). [Link to paper](https://www.cell.com/ajhg/fulltext/S0002-9297(23)00441-X)
