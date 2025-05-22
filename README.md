@@ -57,4 +57,4 @@ $$N_{j(l)}=\sum_{i=1}^N x_{ij(l)}$$
 and $w_{ij}$ is the posterior probability of having a driver mutation in the corresponding gene estimated from gene-level analysis
 
 # Paper
-Wang X, Kostrzewa C, Reiner A, Shen R, Colin B. Adaptation of a Mutual Exclusivity Framework to Identify Driver Mutations within Biological Pathways. [*Submitted*. 2023+]
+Wang X, Kostrzewa C, Reiner A, Shen R, Colin B. Adaptation of a mutual exclusivity framework to identify driver mutations within oncogenic pathways. *The American Journal of Human Genetics* (2024). [Link to paper](https://www.cell.com/ajhg/fulltext/S0002-9297(23)00441-X)
